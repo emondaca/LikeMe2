@@ -30,12 +30,15 @@ export const getPosts = async (req, res) => {
 };
 
 export const agregarPosts = async (req, res) => {
-    const insertar = 'INSERT INTO posts VALUES (DEFAULT, $1, $2, $3, 0 )'
-    const values = [req.body.titulo, req.body.url, req.body.descripcion];
-
+    const insertar = 'INSERT INTO posts VALUES (DEFAULT, $1, $2, $3, 0 ) RETURNING *'
+    const values = req.body.url ? [req.body.titulo, req.body.url, req.body.descripcion] : [req.body.titulo, req.body.img, req.body.descripcion];
+   
     try {
-        await pool.query(insertar, values);
-        return "Registro agregado";
+        const { rows } = await pool.query(insertar, values);
+        if (!rows) {
+            return res.status(404).json( {message: "Datos no encontrados"} );
+        }
+        return rows[0];
     } catch (error) {
         console.log(error);
         if (error.code) {
